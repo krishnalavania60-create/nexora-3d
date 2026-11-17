@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXORA — 3D Experience</title>
+
+<style>
+/* Animatable theme colours: JS changes these and CSS blends between them */
+@property --accent { syntax:'<color>'; inherits:true; initial-value:#3dffb5; }
+@property --glow   { syntax:'<color>'; inherits:true; initial-value:#087a58; }
+
+:root { transition: --accent .9s ease, --glow .9s ease; }
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:#030907;
+  color:white;
+  font-family:Arial,sans-serif;
+  overflow-x:hidden;
+}
+
+/* ---------- HEADER ---------- */
+header {
+  height:85px;
+  padding:0 7%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #ffffff15;
+  position:relative;
+  z-index:5;
+  animation:fadeDown .9s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.logo {
+  font-size:25px;
+  font-weight:900;
+  letter-spacing:4px;
+  cursor:default;
+}
+.logo span { color:var(--accent); text-shadow:0 0 18px var(--accent); }
+.logo:hover { animation:glitch .35s steps(2) 1; }
+
+nav { display:flex; gap:30px; }
+nav a {
+  color:#aaa;
+  text-decoration:none;
+  font-size:13px;
+  position:relative;
+  padding-bottom:4px;
+  transition:color .3s;
+}
+nav a::after {
+  content:"";
+  position:absolute;
+  left:0; bottom:0;
+  width:0; height:2px;
+  background:var(--accent);
+  box-shadow:0 0 10px var(--accent);
+  transition:width .35s cubic-bezier(.2,.8,.2,1);
+}
+nav a:hover { color:var(--accent); }
+nav a:hover::after { width:100%; }
+
+/* ---------- HERO ---------- */
+.hero {
+  min-height:calc(100vh - 85px);
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 55%,
+      var(--glow) 0%,
+      color-mix(in srgb, var(--glow) 38%, #030907) 28%,
+      #06130f 60%,
+      #030907 100%);
+}
+
+/* moving grid */
+.hero::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.15;
+  background-image:
+    linear-gradient(#ffffff14 1px,transparent 1px),
+    linear-gradient(90deg,#ffffff14 1px,transparent 1px);
+  background-size:50px 50px;
+  mask-image:linear-gradient(transparent,black,transparent);
+  animation:gridMove 7s linear infinite;
+}
+
+/* cursor spotlight */
+.hero::after {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  background:radial-gradient(520px circle at var(--mx,50%) var(--my,50%),
+    rgba(255,255,255,.06), transparent 60%);
+}
+
+/* giant outlined flavour name behind the cans */
+.ghost {
+  position:absolute;
+  left:50%;
+  top:50%;
+  white-space:nowrap;
+  font-size:clamp(90px,21vw,330px);
+  font-weight:900;
+  letter-spacing:-.04em;
+  color:transparent;
+  -webkit-text-stroke:2px color-mix(in srgb, var(--accent) 32%, transparent);
+  transform:translate(calc(-50% + var(--px,0px)), -50%);
+  pointer-events:none;
+  user-select:none;
+  z-index:0;
+}
+.ghost.in { animation:ghostIn .9s cubic-bezier(.2,.8,.2,1) both; }
+
+.heading {
+  position:absolute;
+  top:9%;
+  width:100%;
+  text-align:center;
+  z-index:2;
+  pointer-events:none;
+}
+
+.heading small {
+  display:block;
+  color:var(--accent);
+  letter-spacing:5px;
+  font-size:10px;
+  animation:fadeDown 1s .2s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.heading h1 {
+  font-size:clamp(35px,7vw,75px);
+  letter-spacing:-3px;
+  margin-top:15px;
+  animation:fadeDown 1s .35s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.heading h1 span {
+  background:linear-gradient(100deg,var(--accent) 20%,#fff 45%,var(--accent) 70%);
+  background-size:220% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:shimmer 4s linear infinite;
+  filter:drop-shadow(0 0 22px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+#stage {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  touch-action:pan-y;
+  cursor:grab;
+  z-index:1;
+}
+#stage:active { cursor:grabbing; }
+
+/* ---------- DETAILS PANEL ---------- */
+.details {
+  position:absolute;
+  left:8%;
+  top:43%;
+  z-index:3;
+  width:220px;
+  pointer-events:none;
+}
+
+.details small {
+  display:block;
+  color:var(--accent);
+  letter-spacing:4px;
+  font-size:10px;
+}
+
+.details h2 {
+  font-size:35px;
+  margin:13px 0;
+  text-shadow:0 0 28px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.details p {
+  color:#b5c5be;
+  line-height:1.7;
+  font-size:13px;
+}
+
+.price {
+  color:var(--accent);
+  margin-top:18px;
+  font-size:23px;
+  font-weight:bold;
+  text-shadow:0 0 20px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.details.in > * { animation:slideIn .75s cubic-bezier(.2,.8,.2,1) both; }
+.details.in > *:nth-child(2) { animation-delay:.07s; }
+.details.in > *:nth-child(3) { animation-delay:.14s; }
+.details.in > *:nth-child(4) { animation-delay:.21s; }
+
+/* ---------- CONTROLS ---------- */
+.controls {
+  position:absolute;
+  bottom:9%;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:25px;
+  z-index:4;
+}
+
+.controls button {
+  background:#ffffff10;
+  border:1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color:white;
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  font-size:20px;
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  transition:transform .25s cubic-bezier(.2,.8,.2,1), background .25s, color .25s, box-shadow .25s;
+}
+
+.controls button:hover {
+  background:var(--accent);
+  color:#06130f;
+  transform:scale(1.12);
+  box-shadow:0 0 28px var(--accent);
+}
+.controls button:active { transform:scale(.92); }
+
+#counter {
+  color:var(--accent);
+  font-size:12px;
+  letter-spacing:3px;
+  min-width:64px;
+  text-align:center;
+}
+
+.dots {
+  position:absolute;
+  bottom:5.2%;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:9px;
+  z-index:4;
+}
+.dots button {
+  width:8px;
+  height:8px;
+  border-radius:8px;
+  border:0;
+  background:#ffffff33;
+  cursor:pointer;
+  transition:width .4s cubic-bezier(.2,.8,.2,1), background .4s, box-shadow .4s;
+}
+.dots button:hover { background:#ffffff77; }
+.dots button.on {
+  width:28px;
+  background:var(--accent);
+  box-shadow:0 0 14px var(--accent);
+}
+
+.hint {
+  position:absolute;
+  bottom:2%;
+  text-align:center;
+  width:100%;
+  color:#81958c;
+  font-size:10px;
+  letter-spacing:2px;
+  pointer-events:none;
+  animation:pulse 3s ease-in-out infinite;
+}
+
+/* ---------- ABOUT / FOOTER ---------- */
+.about {
+  padding:100px 8%;
+  background:#050c09;
+  text-align:center;
+}
+
+.about h2 {
+  font-size:38px;
+  margin-bottom:20px;
+}
+
+.about p {
+  color:#9aaca3;
+  max-width:600px;
+  margin:auto;
+  line-height:1.9;
+}
+
+.reveal {
+  opacity:0;
+  transform:translateY(40px);
+  filter:blur(6px);
+  transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1), filter .9s;
+}
+.reveal.visible { opacity:1; transform:none; filter:none; }
+.about p.reveal { transition-delay:.15s; }
+
+footer {
+  padding:30px;
+  text-align:center;
+  color:#718078;
+  border-top:1px solid #ffffff15;
+  font-size:12px;
+}
+
+/* ---------- KEYFRAMES ---------- */
+@keyframes fadeDown { from{opacity:0;transform:translateY(-22px)} to{opacity:1;transform:none} }
+@keyframes slideIn  { from{opacity:0;transform:translateX(-30px);filter:blur(8px)} to{opacity:1;transform:none;filter:none} }
+@keyframes ghostIn  {
+  from{opacity:0;transform:translate(calc(-50% + var(--px,0px)), -42%) scale(.88)}
+  to  {opacity:1;transform:translate(calc(-50% + var(--px,0px)), -50%) scale(1)}
+}
+@keyframes shimmer  { from{background-position:0% 0} to{background-position:-220% 0} }
+@keyframes gridMove { from{background-position:0 0} to{background-position:0 50px} }
+@keyframes pulse    { 0%,100%{opacity:.45} 50%{opacity:1} }
+@keyframes glitch   {
+  0%{transform:translate(0)} 25%{transform:translate(-3px,1px)}
+  50%{transform:translate(3px,-1px)} 100%{transform:translate(0)}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { animation:none !important; transition:none !important; }
+  .reveal { opacity:1; transform:none; filter:none; }
+}
+
+@media(max-width:700px) {
+  header { height:65px; padding:0 5%; }
+  .logo { font-size:20px; }
+  nav { gap:12px; }
+  nav a { font-size:11px; }
+  .hero { min-height:720px; }
+  .heading { top:7%; }
+  .details {
+    top:auto;
+    bottom:21%;
+    left:0;
+    width:100%;
+    text-align:center;
+    padding:0 20px;
+  }
+  .details h2 { font-size:27px; margin:7px; }
+  .details p { max-width:280px; margin:auto; }
+  .price { margin-top:8px; }
+  .controls { bottom:9%; }
+  .dots { bottom:5.5%; }
+  .hint { bottom:2%; }
+  .ghost { top:44%; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">NEX<span>ORA</span></div>
+  <nav>
+    <a href="#showcase">Discover</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
+
+<section class="hero" id="showcase">
+
+  <div class="ghost in" id="ghost">ENERGY</div>
+
+  <div class="heading">
+    <small>THE FUTURE OF DISCOVERY</small>
+    <h1>BEYOND <span>ORDINARY.</span></h1>
+  </div>
+
+  <canvas id="stage"></canvas>
+
+  <div class="details in" id="details">
+    <small id="category">ENERGY SERIES</small>
+    <h2 id="productName">NEXORA ENERGY</h2>
+    <p id="description">
+      Discover a new dimension of product design.
+    </p>
+    <div class="price" id="price">₹499</div>
+  </div>
+
+  <div class="controls">
+    <button id="prev" aria-label="Previous product">←</button>
+    <span id="counter">01 / 07</span>
+    <button id="next" aria-label="Next product">→</button>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="hint">DRAG OR SWIPE TO EXPLORE · CLICK THE CAN TO OPEN IT</div>
+</section>
+
+<section class="about" id="about">
+  <h2 class="reveal">Discover <span style="color:var(--accent)">different.</span></h2>
+  <p class="reveal">
+    NEXORA is a concept brand built around design,
+    discovery and innovation. Explore products
+    designed to make everyday experiences different.
+  </p>
+</section>
+
+<footer>
+  © 2026 NEXORA — Concept Experience
+</footer>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+const canvas = document.getElementById("stage");
+const hero   = document.getElementById("showcase");
+const root   = document.documentElement;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const clamp  = (v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp   = (a,b,t)=>a+(b-a)*t;
+const damp   = (k,dt)=>1-Math.exp(-k*dt);
+const smooth = (a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const easeOutBack = t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);};
+const rgba = (hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;};
+
+/* =========================================================
+   RENDERER / SCENE / CAMERA
+   ========================================================= */
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x06251c, 0.025);
+
+const camera = new THREE.PerspectiveCamera(
+  38, window.innerWidth/window.innerHeight, 0.1, 100
+);
+camera.position.set(0, 1.1, 11);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+
+/* =========================================================
+   STUDIO ENVIRONMENT (coloured softboxes -> realistic metal reflections)
+   ========================================================= */
+const pmrem = new THREE.PMREMGenerator(renderer);
+
+function buildEnvironment() {
+  const s = new THREE.Scene();
+  s.add(new THREE.Mesh(
+    new THREE.BoxGeometry(30,16,30),
+    new THREE.MeshBasicMaterial({ color:0x0b1512, side:THREE.BackSide })
+  ));
+  const panel = (w,h,color,intensity,x,y,z)=>{
+    const m = new THREE.Mesh(
+      new THREE.PlaneGeometry(w,h),
+      new THREE.MeshBasicMaterial({
+        color:new THREE.Color(color).multiplyScalar(intensity),
+        side:THREE.DoubleSide
+      })
+    );
+    m.position.set(x,y,z);
+    m.lookAt(0,0,0);
+    s.add(m);
+  };
+  panel(14,6,0xffffff,6,   0,7.5,0);     // top softbox
+  panel(3,12,0x35ffd0,7,  -9,1,2);       // cyan strip (left)
+  panel(3,12,0xff3fd0,7,   9,1,2);       // magenta strip (right)
+  panel(1.4,10,0xffffff,9,-4,1,10);      // front vertical strip L
+  panel(1.4,10,0xffffff,9, 4,1,10);      // front vertical strip R
+  panel(10,2,0xffffff,5,   0,-2,-10);    // back strip
+  return pmrem.fromScene(s,0.03).texture;
+}
+scene.environment = buildEnvironment();
+scene.environmentIntensity = 1.0;
+
+/* =========================================================
+   LIGHTS
+   ========================================================= */
+scene.add(new THREE.AmbientLight(0xffffff,.25));
+
+const greenLight = new THREE.PointLight(0x35ffc0,60,30);
+greenLight.position.set(0,3,4);
+scene.add(greenLight);
+
+const sideLight = new THREE.PointLight(0x168bff,45,25);
+sideLight.position.set(-5,1,2);
+scene.add(sideLight);
+
+const topLight = new THREE.DirectionalLight(0xffffff,1.6);
+topLight.position.set(2,7,5);
+scene.add(topLight);
+
+// white light that sweeps across the metal every few seconds
+const sweepLight = new THREE.PointLight(0xffffff,0,22);
+sweepLight.position.set(-7,2,7);
+scene.add(sweepLight);
+
+/* =========================================================
+   PRODUCT DATA  (hyper colour palettes)
+   ========================================================= */
+const products = [
+  {name:"NEXORA ENERGY",flavor:"ENERGY",type:"ENERGY SERIES",price:"₹499",
+   desc:"Power your day. Discover a different energy.",
+   c:["#00ffa3","#00b86b","#00281c"],accent:"#3dffb5",glow:"#087a58"},
+  {name:"NEXORA ZERO",flavor:"ZERO",type:"ZERO SERIES",price:"₹399",
+   desc:"Minimal design. Maximum character.",
+   c:["#9fe3ff","#1f6bff","#061547"],accent:"#5ec8ff",glow:"#0b3f9a"},
+  {name:"NEXORA ULTRA",flavor:"ULTRA",type:"ULTRA SERIES",price:"₹599",
+   desc:"A bold new experience in every detail.",
+   c:["#d27bff","#7a12ff","#1c0052"],accent:"#c27dff",glow:"#4a12a8"},
+  {name:"NEXORA FRESH",flavor:"FRESH",type:"FRESH SERIES",price:"₹449",
+   desc:"A fresh perspective on everyday essentials.",
+   c:["#f4ff4d","#8fff1a","#174f00"],accent:"#d4ff3a",glow:"#4d7a0a"},
+  {name:"NEXORA NIGHT",flavor:"NIGHT",type:"NIGHT SERIES",price:"₹499",
+   desc:"Designed to stand apart.",
+   c:["#ff4fa8","#c20068","#2a0020"],accent:"#ff5cae",glow:"#8a0d4f"},
+  {name:"NEXORA CORE",flavor:"CORE",type:"CORE SERIES",price:"₹349",
+   desc:"Pure design. No compromises.",
+   c:["#3a4654","#10161d","#000000"],accent:"#00e5ff",glow:"#0a4c58"},
+  {name:"NEXORA X",flavor:"X",type:"LIMITED SERIES",price:"₹699",
+   desc:"The next chapter starts here.",
+   c:["#ffc400","#ff4a00","#4a0900"],accent:"#ff8a2a",glow:"#8a3300"}
+];
+const COUNT = products.length;
+const STEP  = Math.PI*2/COUNT;
+
+/* =========================================================
+   TEXTURES
+   ========================================================= */
+// 360° wraparound label. Front of the can is the CENTRE of the canvas.
+function createLabel(p) {
+  const W=2048, H=1024, cx=W/2;
+  const c=document.createElement("canvas");
+  c.width=W; c.height=H;
+  const ctx=c.getContext("2d");
+  const FONT=s=>`900 ${s}px "Arial Black","Helvetica Neue",Arial,sans-serif`;
+  const stretch=.82; // compensates for the wider-than-tall UV mapping
+
+  // base gradient
+  let g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,p.c[0]); g.addColorStop(.55,p.c[1]); g.addColorStop(1,p.c[2]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // hot centre glow
+  g=ctx.createRadialGradient(cx,H*.46,10,cx,H*.46,520);
+  g.addColorStop(0,"rgba(255,255,255,.5)");
+  g.addColorStop(.4,rgba(p.accent,.25));
+  g.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // speed stripes (period divides the width -> seamless wrap)
+  for(let k=-4;k<W/128+4;k++){
+    const x=k*128;
+    ctx.fillStyle=`rgba(255,255,255,${k%3===0?.14:.07})`;
+    ctx.beginPath();
+    ctx.moveTo(x,0); ctx.lineTo(x+46,0);
+    ctx.lineTo(x+46-260,H); ctx.lineTo(x-260,H);
+    ctx.fill();
+  }
+
+  // liquid wave
+  const wave=(off)=>{
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=16){
+      const y=800+off+Math.sin(x/W*Math.PI*2*5)*26+Math.sin(x/W*Math.PI*2*11)*12;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W,H); ctx.closePath();
+  };
+  g=ctx.createLinearGradient(0,780,0,H);
+  g.addColorStop(0,rgba(p.accent,.55)); g.addColorStop(1,"rgba(0,0,0,.55)");
+  wave(0); ctx.fillStyle=g; ctx.fill();
+  ctx.lineWidth=4; ctx.strokeStyle="rgba(255,255,255,.55)";
+  wave(-16); ctx.stroke();
+
+  // top & bottom bands
+  ctx.fillStyle="rgba(0,0,0,.35)";
+  ctx.fillRect(0,0,W,96); ctx.fillRect(0,H-96,W,96);
+  ctx.fillStyle="rgba(255,255,255,.55)";
+  ctx.fillRect(0,96,W,3); ctx.fillRect(0,H-99,W,3);
+  ctx.fillStyle=p.accent;
+  ctx.fillRect(0,106,W,6); ctx.fillRect(0,H-112,W,6);
+
+  // print grain
+  for(let i=0;i<6000;i++){
+    ctx.fillStyle=`rgba(255,255,255,${Math.random()*.05})`;
+    ctx.fillRect(Math.random()*W,Math.random()*H,2,2);
+  }
+
+  // helpers for text
+  const setup=(x,y,size,spacing=0)=>{
+    ctx.translate(x,y); ctx.scale(stretch,1);
+    ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.lineJoin="round";
+    ctx.font=FONT(size);
+    if("letterSpacing" in ctx) ctx.letterSpacing=spacing+"px";
+  };
+  const text=(str,y,size,{fill="#fff",alpha=1,spacing=0,x=cx}={})=>{
+    ctx.save(); setup(x,y,size,spacing);
+    ctx.globalAlpha=alpha;
+    ctx.lineWidth=size*.12; ctx.strokeStyle="rgba(0,0,0,.35)";
+    ctx.strokeText(str,0,0);
+    ctx.fillStyle=fill; ctx.fillText(str,0,0);
+    ctx.restore();
+  };
+
+  // brand
+  text("NEXORA",205,66,{spacing:22});
+
+  // lightning bolt
+  ctx.save();
+  ctx.translate(cx,352); ctx.scale(stretch*1.5,1.5);
+  ctx.shadowColor=p.accent; ctx.shadowBlur=36;
+  ctx.fillStyle="#fff";
+  ctx.beginPath();
+  [[10,-60],[-28,6],[-4,6],[-14,60],[30,-12],[4,-12]].forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  // big flavour word (fake 3D extrusion + glow)
+  ctx.save();
+  setup(cx,540,250,4);
+  const w=ctx.measureText(p.flavor).width;
+  const size=Math.min(250,250*680/w);
+  ctx.font=FONT(size);
+  ctx.fillStyle="rgba(0,0,0,.28)";
+  for(let d=22;d>0;d-=2) ctx.fillText(p.flavor,d*.7,d);
+  ctx.lineWidth=size*.07; ctx.strokeStyle="rgba(0,0,0,.55)";
+  ctx.strokeText(p.flavor,0,0);
+  const tg=ctx.createLinearGradient(0,-size/2,0,size/2);
+  tg.addColorStop(0,"#ffffff"); tg.addColorStop(1,p.accent);
+  ctx.shadowColor=p.accent; ctx.shadowBlur=46;
+  ctx.fillStyle=tg; ctx.fillText(p.flavor,0,0);
+  ctx.restore();
+
+  text("BEYOND ORDINARY",705,48,{spacing:8});
+  text("DESIGNED FOR WHAT'S NEXT",772,28,{spacing:6,alpha:.9});
+
+  // side emblems (±90°)
+  text("NEXORA",520,86,{x:512,alpha:.35,spacing:10});
+  text("NEXORA",520,86,{x:1536,alpha:.35,spacing:10});
+
+  // barcode panel on the back (drawn on both edges so the seam is clean)
+  let seed=p.flavor.length*97+13;
+  const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  const bars=[]; for(let i=0;i<42;i++) bars.push(2+Math.floor(rnd()*7));
+  [0,W].forEach(x0=>{
+    ctx.fillStyle="#f4f4f4"; ctx.fillRect(x0-170,380,340,200);
+    ctx.fillStyle="#0a0a0a";
+    let x=x0-150;
+    bars.forEach((b,i)=>{ if(i%2===0) ctx.fillRect(x,400,b,130); x+=b+1; });
+    ctx.save(); ctx.translate(x0,556); ctx.scale(stretch,1);
+    ctx.fillStyle="#0a0a0a"; ctx.font="bold 22px Arial"; ctx.textAlign="center";
+    ctx.fillText("NEXORA 2026 · 250 ML",0,0);
+    ctx.restore();
+  });
+
+  const tex=new THREE.CanvasTexture(c);
+  tex.colorSpace=THREE.SRGBColorSpace;
+  tex.wrapS=THREE.RepeatWrapping;
+  tex.offset.x=.5;               // centre of the artwork -> front of the can
+  tex.anisotropy=maxAniso;
+  return tex;
+}
+
+// condensation droplets (shared by all cans)
+function createDroplets() {
+  const W=1024,H=512;
+  const c=document.createElement("canvas");
+  c.width=W; c.height=H;
+  const ctx=c.getContext("2d");
+
+  const drop=(x,y,r)=>{
+    ctx.save();
+    ctx.translate(x,y); ctx.scale(1,1.22);
+    let g=ctx.createRadialGradient(0,r*.25,r*.1,0,0,r);
+    g.addColorStop(0,"rgba(255,255,255,.28)");
+    g.addColorStop(.7,"rgba(255,255,255,.08)");
+    g.addColorStop(1,"rgba(0,0,0,.35)");
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+    ctx.lineWidth=Math.max(1,r*.22);
+    ctx.strokeStyle="rgba(0,0,0,.4)";
+    ctx.beginPath(); ctx.arc(0,0,r*.9,Math.PI*1.05,Math.PI*1.95); ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.55)";
+    ctx.beginPath(); ctx.arc(0,0,r*.75,Math.PI*.15,Math.PI*.85); ctx.stroke();
+    ctx.fillStyle="rgba(255,255,255,.95)";
+    ctx.beginPath(); ctx.arc(-r*.35,-r*.4,Math.max(.8,r*.22),0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  };
+
+  for(let i=0;i<560;i++){
+    const big=Math.random()<.08;
+    const r=big?6+Math.random()*7:1.6+Math.random()*3.8;
+    const x=Math.random()*W, y=H*.07+Math.random()*H*.86;
+    if(big){
+      const len=40+Math.random()*70;
+      const g=ctx.createLinearGradient(0,y,0,y+len);
+      g.addColorStop(0,"rgba(255,255,255,.35)"); g.addColorStop(1,"rgba(255,255,255,0)");
+      ctx.strokeStyle=g; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+len); ctx.stroke();
+    }
+    drop(x,y,r);
+  }
+
+  const tex=new THREE.CanvasTexture(c);
+  tex.colorSpace=THREE.SRGBColorSpace;
+  tex.wrapS=THREE.RepeatWrapping;
+  tex.anisotropy=maxAniso;
+  return tex;
+}
+const dropTex=createDroplets();
+
+// soft round sprite + bubble sprite
+function spriteTexture(kind) {
+  const c=document.createElement("canvas");
+  c.width=c.height=64;
+  const ctx=c.getContext("2d");
+  let g;
+  if(kind==="soft"){
+    g=ctx.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0,"rgba(255,255,255,.95)");
+    g.addColorStop(.4,"rgba(255,255,255,.35)");
+    g.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,64,64);
+  } else if(kind==="bubble"){
+    g=ctx.createRadialGradient(32,32,0,32,32,30);
+    g.addColorStop(0,"rgba(255,255,255,0)");
+    g.addColorStop(.62,"rgba(255,255,255,.06)");
+    g.addColorStop(.86,"rgba(255,255,255,.75)");
+    g.addColorStop(1,"rgba(255,255,255,0)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,64,64);
+    ctx.fillStyle="rgba(255,255,255,.9)";
+    ctx.beginPath(); ctx.arc(22,21,4,0,Math.PI*2); ctx.fill();
+  } else { // shadow blob
+    g=ctx.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0,"rgba(0,0,0,.85)");
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,64,64);
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+const softTex=spriteTexture("soft");
+const bubbleTex=spriteTexture("bubble");
+const blobTex=spriteTexture("blob");
+
+/* =========================================================
+   CAN GEOMETRY
+   ========================================================= */
+const V=(x,y)=>new THREE.Vector2(x,y);
+
+const topProfile=[
+  V(.66,.85),V(.658,.92),V(.64,.98),V(.6,1.03),V(.55,1.07),V(.51,1.095),
+  V(.5,1.12),V(.485,1.135),V(.465,1.12),V(.455,1.075),V(.44,1.07),V(0,1.07)
+];
+const bottomProfile=[
+  V(0,-.92),V(.28,-.94),V(.4,-.99),V(.45,-1.05),V(.49,-1.075),
+  V(.54,-1.06),V(.6,-1.01),V(.645,-.95),V(.66,-.9),V(.66,-.85)
+];
+const topGeo=new THREE.LatheGeometry(topProfile,72);
+const bottomGeo=new THREE.LatheGeometry(bottomProfile,72);
+const bodyGeo=new THREE.CylinderGeometry(.66,.66,1.7,96,1,true);
+const dropGeo=new THREE.CylinderGeometry(.664,.664,1.68,72,1,true);
+
+// pull tab
+const tabShape=new THREE.Shape();
+tabShape.absellipse(0,0,.17,.11,0,Math.PI*2,false,0);
+const tabHole=new THREE.Path();
+tabHole.absellipse(0,-.045,.06,.04,0,Math.PI*2,true,0);
+tabShape.holes.push(tabHole);
+const tabGeo=new THREE.ExtrudeGeometry(tabShape,{depth:.012,bevelEnabled:false,curveSegments:24});
+
+const scoreGeo=new THREE.TorusGeometry(.38,.007,8,72);
+const rivetGeo=new THREE.SphereGeometry(.035,16,12);
+const holeGeo=new THREE.CircleGeometry(.13,32);
+
+const silver=new THREE.MeshPhysicalMaterial({
+  color:0xdfe6ea, metalness:1, roughness:.2,
+  envMapIntensity:1.5, side:THREE.DoubleSide
+});
+
+/* =========================================================
+   BUILD THE CAROUSEL
+   ========================================================= */
+const carousel=new THREE.Group();
+scene.add(carousel);
+
+const R=3.65;
+const FLOOR_Y=-1.7;
+const cans=[];
+
+products.forEach((p,i)=>{
+  const group=new THREE.Group();
+  group.rotation.order="YXZ";
+  group.userData.index=i;
+
+  const bodyMat=new THREE.MeshPhysicalMaterial({
+    map:createLabel(p),
+    metalness:.55,
+    roughness:.3,
+    clearcoat:1,
+    clearcoatRoughness:.06,
+    envMapIntensity:1.1,
+    emissive:0xffffff,
+    emissiveIntensity:.22
+  });
+  bodyMat.emissiveMap=bodyMat.map;
+
+  const body=new THREE.Mesh(bodyGeo,bodyMat);
+  group.add(body);
+
+  group.add(new THREE.Mesh(topGeo,silver));
+  group.add(new THREE.Mesh(bottomGeo,silver));
+
+  // condensation overlay
+  const dropMat=new THREE.MeshBasicMaterial({
+    map:dropTex, transparent:true, opacity:.9, depthWrite:false
+  });
+  const drops=new THREE.Mesh(dropGeo,dropMat);
+  drops.rotation.y=Math.random()*Math.PI*2;
+  group.add(drops);
+
+  // scored lid ring, rivet, tab, and the "opened" hole
+  const score=new THREE.Mesh(scoreGeo,silver);
+  score.rotation.x=Math.PI/2; score.position.y=1.073;
+  group.add(score);
+
+  const rivet=new THREE.Mesh(rivetGeo,silver);
+  rivet.position.set(0,1.082,.02);
+  group.add(rivet);
+
+  const pivot=new THREE.Group();
+  pivot.position.set(0,1.083,.02);
+  const tab=new THREE.Mesh(tabGeo,silver);
+  tab.rotation.x=-Math.PI/2;
+  tab.position.set(0,0,.14);
+  pivot.add(tab);
+  group.add(pivot);
+
+  const hole=new THREE.Mesh(
+    holeGeo,
+    new THREE.MeshBasicMaterial({color:0x020405,transparent:true,opacity:0,depthWrite:false})
+  );
+  hole.rotation.x=-Math.PI/2;
+  hole.scale.set(1.3,.8,1);
+  hole.position.set(0,1.075,-.2);
+  hole.visible=false;
+  group.add(hole);
+
+  const topPoint=new THREE.Object3D();
+  topPoint.position.set(0,1.15,0);
+  group.add(topPoint);
+
+  const angle=(i/COUNT)*Math.PI*2;
+  group.position.set(Math.sin(angle)*R,0,Math.cos(angle)*R);
+  group.rotation.y=angle;
+  carousel.add(group);
+
+  // contact shadow
+  const blob=new THREE.Mesh(
+    new THREE.PlaneGeometry(2.2,2.2),
+    new THREE.MeshBasicMaterial({map:blobTex,transparent:true,opacity:0,depthWrite:false})
+  );
+  blob.rotation.x=-Math.PI/2;
+  carousel.add(blob);
+
+  cans.push({
+    group,angle,bodyMat,dropMat,pivot,hole,top:topPoint,blob,
+    focus:0,hover:0,tx:0,tz:0,
+    openT:-1,fired:false,emit:0
+  });
+});
+
+/* =========================================================
+   FLOOR GLOW / RINGS (sit under the front position)
+   ========================================================= */
+const accentCur=new THREE.Color(products[0].accent);
+const accentTarget=new THREE.Color(products[0].accent);
+const tmpColor=new THREE.Color();
+const white=new THREE.Color(1,1,1);
+const hsl={h:0,s:0,l:0};
+
+const pool=new THREE.Mesh(
+  new THREE.PlaneGeometry(6.5,6.5),
+  new THREE.MeshBasicMaterial({
+    map:softTex,color:accentCur,transparent:true,opacity:.55,
+    blending:THREE.AdditiveBlending,depthWrite:false
+  })
+);
+pool.rotation.x=-Math.PI/2;
+pool.position.set(0,FLOOR_Y+.01,R);
+scene.add(pool);
+
+const ringMat=new THREE.MeshBasicMaterial({color:accentCur});
+const ring=new THREE.Mesh(new THREE.TorusGeometry(1.15,.025,12,96),ringMat);
+ring.rotation.x=Math.PI/2;
+ring.position.set(0,FLOOR_Y+.03,R);
+scene.add(ring);
+
+const pulseMat=new THREE.MeshBasicMaterial({
+  color:accentCur,transparent:true,opacity:.4,
+  blending:THREE.AdditiveBlending,depthWrite:false
+});
+const pulse=new THREE.Mesh(new THREE.TorusGeometry(1.15,.012,8,96),pulseMat);
+pulse.rotation.x=Math.PI/2;
+pulse.position.copy(ring.position);
+scene.add(pulse);
+
+// shockwave used when a can is opened
+const shockMat=new THREE.MeshBasicMaterial({
+  color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,
+  blending:THREE.AdditiveBlending,depthWrite:false
+});
+const shock=new THREE.Mesh(new THREE.RingGeometry(.92,1,64),shockMat);
+shock.visible=false;
+scene.add(shock);
+let shockT=-1;
+
+/* =========================================================
+   PARTICLES (ambient fizz bubbles + spray)
+   ========================================================= */
+let pointScale=600;
+const pointMaterials=[];
+
+function makePoints(count,map) {
+  const geo=new THREE.BufferGeometry();
+  const pos=new Float32Array(count*3);
+  const size=new Float32Array(count);
+  const alpha=new Float32Array(count);
+  geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  geo.setAttribute("aSize",new THREE.BufferAttribute(size,1));
+  geo.setAttribute("aAlpha",new THREE.BufferAttribute(alpha,1));
+
+  const mat=new THREE.ShaderMaterial({
+    uniforms:{
+      uMap:{value:map},
+      uColor:{value:new THREE.Color()},
+      uScale:{value:pointScale}
+    },
+    vertexShader:`
+      attribute float aSize;
+      attribute float aAlpha;
+      uniform float uScale;
+      varying float vA;
+      void main(){
+        vA=aAlpha;
+        vec4 mv=modelViewMatrix*vec4(position,1.0);
+        gl_PointSize=aSize*uScale/-mv.z;
+        gl_Position=projectionMatrix*mv;
+      }`,
+    fragmentShader:`
+      uniform sampler2D uMap;
+      uniform vec3 uColor;
+      varying float vA;
+      void main(){
+        float a=texture2D(uMap,gl_PointCoord).a*vA;
+        if(a<0.003) discard;
+        gl_FragColor=vec4(uColor,a);
+        #include <colorspace_fragment>
+      }`,
+    transparent:true,
+    depthWrite:false,
+    blending:THREE.AdditiveBlending
+  });
+  pointMaterials.push(mat);
+
+  const points=new THREE.Points(geo,mat);
+  points.frustumCulled=false;
+  scene.add(points);
+  return {points,geo,mat,pos,size,alpha,count};
+}
+
+// ambient fizz
+const bubbles=makePoints(240,bubbleTex);
+const bBaseX=new Float32Array(bubbles.count);
+const bSpeed=new Float32Array(bubbles.count);
+const bFreq=new Float32Array(bubbles.count);
+const bPhase=new Float32Array(bubbles.count);
+const bAlpha=new Float32Array(bubbles.count);
+const bSize=new Float32Array(bubbles.count);
+function resetBubble(i,anywhere){
+  bBaseX[i]=(Math.random()-.5)*17;
+  bubbles.pos[i*3+1]=anywhere?-2+Math.random()*7:-2.2;
+  bubbles.pos[i*3+2]=-3+Math.random()*7.5;
+  bSpeed[i]=.2+Math.random()*.6;
+  bFreq[i]=.6+Math.random()*1.6;
+  bPhase[i]=Math.random()*6.28;
+  bAlpha[i]=.18+Math.random()*.5;
+  bSize[i]=.03+Math.random()*.1;
+}
+for(let i=0;i<bubbles.count;i++) resetBubble(i,true);
+
+// spray burst when a can opens
+const spray=makePoints(520,softTex);
+spray.cursor=0;
+const sVel=new Float32Array(spray.count*3);
+const sAge=new Float32Array(spray.count);
+const sLife=new Float32Array(spray.count);
+const sBase=new Float32Array(spray.count);
+
+function spawnSpray(o,n){
+  for(let k=0;k<n;k++){
+    const i=spray.cursor=(spray.cursor+1)%spray.count;
+    spray.pos[i*3]  =o.x+(Math.random()-.5)*.25;
+    spray.pos[i*3+1]=o.y;
+    spray.pos[i*3+2]=o.z+(Math.random()-.5)*.25;
+    const a=Math.random()*6.283, sp=Math.random()*1.3;
+    sVel[i*3]  =Math.cos(a)*sp;
+    sVel[i*3+1]=2.4+Math.random()*3.2;
+    sVel[i*3+2]=Math.sin(a)*sp+Math.random()*.5;
+    sAge[i]=0;
+    sLife[i]=.8+Math.random()*1.0;
+    sBase[i]=(.05+Math.random()*.15)*(Math.random()<.18?2.6:1);
+  }
+}
+
+function updatePointScale(){
+  pointScale=renderer.domElement.height/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)));
+  pointMaterials.forEach(m=>m.uniforms.uScale.value=pointScale);
+}
+updatePointScale();
+
+/* =========================================================
+   SOUND (tiny synthesised "pop + fizz")
+   ========================================================= */
+let audioCtx=null;
+function playFizz(){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const ac=audioCtx, t=ac.currentTime;
+    const osc=ac.createOscillator(), og=ac.createGain();
+    osc.frequency.setValueAtTime(900,t);
+    osc.frequency.exponentialRampToValueAtTime(120,t+.08);
+    og.gain.setValueAtTime(.3,t);
+    og.gain.exponentialRampToValueAtTime(.001,t+.12);
+    osc.connect(og).connect(ac.destination);
+    osc.start(t); osc.stop(t+.14);
+
+    const len=Math.floor(ac.sampleRate*1.6);
+    const buf=ac.createBuffer(1,len,ac.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+    const src=ac.createBufferSource(); src.buffer=buf;
+    const hp=ac.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=3500;
+    const ng=ac.createGain();
+    ng.gain.setValueAtTime(0,t+.08);
+    ng.gain.linearRampToValueAtTime(.22,t+.15);
+    ng.gain.exponentialRampToValueAtTime(.001,t+1.6);
+    src.connect(hp).connect(ng).connect(ac.destination);
+    src.start(t+.08);
+  }catch(e){}
+}
+
+/* =========================================================
+   UI / DETAILS
+   ========================================================= */
+const detailsEl=document.getElementById("details");
+const ghostEl=document.getElementById("ghost");
+const dotsEl=document.getElementById("dots");
+
+products.forEach((_,i)=>{
+  const b=document.createElement("button");
+  b.setAttribute("aria-label",`Go to product ${i+1}`);
+  b.onclick=()=>goTo(i);
+  dotsEl.appendChild(b);
+});
+
+function restart(el){
+  el.classList.remove("in");
+  void el.offsetWidth;
+  el.classList.add("in");
+}
+
+let activeIndex=0;
+function updateDetails(index){
+  const p=products[index];
+  document.getElementById("productName").textContent=p.name;
+  document.getElementById("category").textContent=p.type;
+  document.getElementById("description").textContent=p.desc;
+  document.getElementById("price").textContent=p.price;
+  document.getElementById("counter").textContent=
+    String(index+1).padStart(2,"0")+" / "+String(COUNT).padStart(2,"0");
+  ghostEl.textContent=p.flavor;
+  [...dotsEl.children].forEach((d,i)=>d.classList.toggle("on",i===index));
+  root.style.setProperty("--accent",p.accent);
+  root.style.setProperty("--glow",p.glow);
+  accentTarget.set(p.accent);
+  restart(detailsEl);
+  restart(ghostEl);
+}
+updateDetails(0);
+
+/* =========================================================
+   CAROUSEL CONTROLS
+   ========================================================= */
+let rotation=reduceMotion?0:-1.4;
+let targetRotation=0;
+
+let dragging=false,downX=0,downY=0,prevX=0,moved=0,vel=0;
+const pointer={nx:0,ny:0};
+let hoverIdx=-1;
+let introDone=reduceMotion;
+
+function nearestProduct(){
+  let best=0,smallest=Infinity;
+  cans.forEach((can,i)=>{
+    const a=can.angle+rotation;
+    const dist=Math.abs(Math.atan2(Math.sin(a),Math.cos(a)));
+    if(dist<smallest){smallest=dist;best=i;}
+  });
+  if(best!==activeIndex){
+    activeIndex=best;
+    updateDetails(best);
+  }
+}
+
+function snap(extra=0){
+  targetRotation=Math.round((targetRotation+extra)/STEP)*STEP;
+}
+function moveNext(dir){
+  targetRotation=Math.round(targetRotation/STEP)*STEP+dir*STEP;
+}
+function goTo(i){
+  const cur=(((-Math.round(targetRotation/STEP))%COUNT)+COUNT)%COUNT;
+  let diff=i-cur;
+  if(diff>COUNT/2) diff-=COUNT;
+  if(diff<-COUNT/2) diff+=COUNT;
+  targetRotation=Math.round(targetRotation/STEP)*STEP-diff*STEP;
+}
+
+document.getElementById("next").onclick=()=>moveNext(-1);
+document.getElementById("prev").onclick=()=>moveNext(1);
+window.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight") moveNext(-1);
+  if(e.key==="ArrowLeft")  moveNext(1);
+});
+
+const ray=new THREE.Raycaster();
+const ndc=new THREE.Vector2();
+function pickCan(){
+  ndc.set(pointer.nx,pointer.ny);
+  ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(cans.map(c=>c.group),true);
+  if(!hits.length) return null;
+  let o=hits[0].object;
+  while(o && o.userData.index===undefined) o=o.parent;
+  return o?cans[o.userData.index]:null;
+}
+
+function trackPointer(e){
+  const r=canvas.getBoundingClientRect();
+  pointer.nx=((e.clientX-r.left)/r.width)*2-1;
+  pointer.ny=-(((e.clientY-r.top)/r.height)*2-1);
+  hero.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");
+  hero.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%");
+}
+
+function openCan(can){
+  if(can.openT>=0 && can.openT<1.2) return;
+  can.openT=0; can.fired=false; can.emit=0;
+  playFizz();
+}
+
+canvas.addEventListener("pointerdown",e=>{
+  dragging=true; moved=0; vel=0;
+  downX=prevX=e.clientX; downY=e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+
+canvas.addEventListener("pointermove",e=>{
+  trackPointer(e);
+  if(dragging){
+    const d=e.clientX-prevX;
+    prevX=e.clientX;
+    moved=Math.hypot(e.clientX-downX,e.clientY-downY);
+    vel=lerp(vel,d,.4);
+    targetRotation+=d*.006;
+    return;
+  }
+  const hit=pickCan();
+  hoverIdx=hit?cans.indexOf(hit):-1;
+  canvas.style.cursor=hit?"pointer":"";
+});
+
+function endDrag(e){
+  if(!dragging) return;
+  dragging=false;
+  if(e && e.type==="pointerup" && moved<6){
+    trackPointer(e);
+    snap();
+    const hit=pickCan();
+    if(hit){
+      const idx=cans.indexOf(hit);
+      if(idx===activeIndex) openCan(hit); else goTo(idx);
+    }
+  } else {
+    snap(vel*.006*10);
+  }
+}
+canvas.addEventListener("pointerup",endDrag);
+canvas.addEventListener("pointercancel",endDrag);
+canvas.addEventListener("pointerleave",()=>{hoverIdx=-1;});
+
+/* scroll-reveal for the About section */
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(en=>{ if(en.isIntersecting){en.target.classList.add("visible");io.unobserve(en.target);} });
+},{threshold:.25});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+
+/* =========================================================
+   ANIMATION LOOP
+   ========================================================= */
+const clock=new THREE.Clock();
+let time=0, flash=0;
+const tmpV=new THREE.Vector3();
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  const dt=Math.min(clock.getDelta(),.05);
+  time+=dt;
+
+  // carousel motion (frame-rate independent smoothing)
+  rotation+=(targetRotation-rotation)*damp(5,dt);
+  carousel.rotation.y=rotation;
+
+  // theme colours blend smoothly towards the active product
+  accentCur.lerp(accentTarget,damp(4,dt));
+  accentCur.getHSL(hsl);
+  greenLight.color.copy(accentCur);
+  sideLight.color.setHSL((hsl.h+.5)%1,1,.55);
+  scene.fog.color.copy(accentCur).multiplyScalar(.1);
+
+  // camera parallax
+  camera.position.x+=(pointer.nx*.6-camera.position.x)*damp(3,dt);
+  camera.position.y+=(1.1+pointer.ny*.3-camera.position.y)*damp(3,dt);
+  camera.lookAt(0,0,0);
+  root.style.setProperty("--px",(-pointer.nx*34).toFixed(1)+"px");
+
+  // moving highlight sweep
+  const ph=(time%5)/5;
+  sweepLight.position.x=lerp(-8,8,ph);
+  sweepLight.intensity=90*smooth(0,.12,ph)*(1-smooth(.88,1,ph));
+
+  // flash from can opening
+  flash*=Math.exp(-dt*4);
+  topLight.intensity=1.6+flash*5;
+  greenLight.intensity=60+flash*200;
+
+  // cans
+  cans.forEach((can,i)=>{
+    const a=can.angle+rotation;
+    const front=(Math.cos(a)+1)/2;
+
+    can.focus+=((i===activeIndex?1:0)-can.focus)*damp(6,dt);
+    can.hover+=((i===hoverIdx&&i===activeIndex?1:0)-can.hover)*damp(10,dt);
+
+    const it=clamp((time-.25-i*.12)/1.0,0,1);
+    const e=reduceMotion?1:easeOutBack(it);
+
+    const s=(.6+.5*front*front)*(1+.06*can.focus+.03*can.hover)*Math.max(e,.0001);
+    can.group.scale.setScalar(s);
+
+    const bob=Math.sin(time*1.5+i*.9)*.1;
+    can.group.position.y=bob+(1-e)*3+can.focus*.12;
+
+    // showcase sway + pointer tilt (active can only)
+    const sway=Math.sin(time*.7+i)*.2*can.focus;
+    can.group.rotation.y=can.angle+sway;
+    can.tx+=(-pointer.ny*.18*can.focus-can.tx)*damp(6,dt);
+    can.tz+=(-pointer.nx*.10*can.focus-can.tz)*damp(6,dt);
+
+    // open sequence
+    let shakeZ=0,tabOpen=0;
+    if(can.openT>=0){
+      can.openT+=dt;
+      const t=can.openT;
+      if(t<.3 && !reduceMotion) shakeZ=Math.sin(t*70)*(1-t/.3)*.05;
+      tabOpen=smooth(.06,.26,t)-smooth(3,3.4,t);
+
+      if(t>.14 && !can.fired){
+        can.fired=true;
+        flash=1;
+        can.top.getWorldPosition(tmpV);
+        shock.position.copy(tmpV);
+        shock.lookAt(camera.position);
+        shock.visible=true; shockT=0;
+      }
+      if(t>.14 && t<1.7){
+        can.emit+=dt*140;
+        can.top.getWorldPosition(tmpV);
+        const n=Math.floor(can.emit);
+        can.emit-=n;
+        if(n>0) spawnSpray(tmpV,n);
+      }
+      if(t>3.5) can.openT=-1;
+    }
+    can.group.rotation.x=can.tx;
+    can.group.rotation.z=can.tz+shakeZ;
+    can.pivot.rotation.x=-tabOpen*1.0;
+    can.hole.material.opacity=clamp(tabOpen*1.2,0,1);
+    can.hole.visible=tabOpen>.01;
+
+    can.bodyMat.emissiveIntensity=.2+.2*can.focus+.12*can.hover+(can.openT>=0?flash*.35:0);
+    can.dropMat.opacity=.55+.4*can.focus;
+
+    // contact shadow
+    can.blob.position.set(can.group.position.x,FLOOR_Y+.005,can.group.position.z);
+    can.blob.scale.setScalar(s*(1.05-bob*.6));
+    can.blob.material.opacity=(.2+.35*front)*clamp(e,0,1);
+  });
+
+  // floor glow + rings
+  pool.material.opacity=.45+.12*Math.sin(time*2);
+  ring.scale.setScalar(1+.025*Math.sin(time*2.2));
+  const pp=(time*.5)%1;
+  pulse.scale.setScalar(1+pp*.9);
+  pulseMat.opacity=(1-pp)*.45;
+
+  // shockwave
+  if(shockT>=0){
+    shockT+=dt;
+    const k=shockT/.7;
+    if(k>=1){shock.visible=false;shockT=-1;}
+    else{
+      shock.scale.setScalar(.3+shockT*4);
+      shockMat.opacity=(1-k)*.8;
+      shockMat.color.copy(accentCur).lerp(white,.4);
+    }
+  }
+
+  // ambient bubbles
+  bubbles.mat.uniforms.uColor.value.copy(tmpColor.copy(accentCur).lerp(white,.4));
+  for(let i=0;i<bubbles.count;i++){
+    let y=bubbles.pos[i*3+1]+bSpeed[i]*dt;
+    if(y>5){resetBubble(i,false);y=bubbles.pos[i*3+1];}
+    bubbles.pos[i*3+1]=y;
+    bubbles.pos[i*3]=bBaseX[i]+Math.sin(time*bFreq[i]+bPhase[i])*.12;
+    bubbles.alpha[i]=bAlpha[i]*smooth(-2,-1,y)*(1-smooth(3.5,5,y));
+    bubbles.size[i]=bSize[i];
+  }
+  bubbles.geo.attributes.position.needsUpdate=true;
+  bubbles.geo.attributes.aAlpha.needsUpdate=true;
+  bubbles.geo.attributes.aSize.needsUpdate=true;
+
+  // spray
+  spray.mat.uniforms.uColor.value.copy(tmpColor.copy(accentCur).lerp(white,.6));
+  for(let i=0;i<spray.count;i++){
+    if(sAge[i]<sLife[i]){
+      sAge[i]+=dt;
+      sVel[i*3+1]-=5*dt;
+      const drag=1-dt*.5;
+      sVel[i*3]*=drag; sVel[i*3+1]*=drag; sVel[i*3+2]*=drag;
+      spray.pos[i*3]  +=sVel[i*3]*dt;
+      spray.pos[i*3+1]+=sVel[i*3+1]*dt;
+      spray.pos[i*3+2]+=sVel[i*3+2]*dt;
+      const t=clamp(sAge[i]/sLife[i],0,1);
+      spray.alpha[i]=Math.pow(1-t,1.5)*.9;
+      spray.size[i]=sBase[i]*(1+t*.6);
+    } else spray.alpha[i]=0;
+  }
+  spray.geo.attributes.position.needsUpdate=true;
+  spray.geo.attributes.aAlpha.needsUpdate=true;
+  spray.geo.attributes.aSize.needsUpdate=true;
+
+  // only start syncing the text once the intro spin has settled
+  if(!introDone && time>1.8) introDone=true;
+  if(introDone) nearestProduct();
+
+  renderer.render(scene,camera);
+}
+
+animate();
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+window.addEventListener("resize",()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  updatePointScale();
+});
+</script>
+
+</body>
+</html>
